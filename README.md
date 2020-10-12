@@ -1,0 +1,117 @@
+# Quick reference
+
+- **Maintained by**: [Valentin Lahaye](https://github.com/vallahaye/docker-nginx-rtmp)
+
+# Supported tags and respective `Dockerfile` links
+
+- [`mainline`, `latest`](https://github.com/vallahaye/docker-nginx-rtmp/blob/master/mainline/debian/Dockerfile)
+- [`mainline-perl`](https://github.com/vallahaye/docker-nginx-rtmp/blob/master/mainline/debian-perl/Dockerfile)
+- [`mainline-alpine`](https://github.com/vallahaye/docker-nginx-rtmp/blob/master/mainline/alpine/Dockerfile)
+- [`mainline-alpine-perl`](https://github.com/vallahaye/docker-nginx-rtmp/blob/master/mainline/alpine-perl/Dockerfile)
+- [`stable`](https://github.com/vallahaye/docker-nginx-rtmp/blob/master/stable/debian/Dockerfile)
+- [`stable-perl`](https://github.com/vallahaye/docker-nginx-rtmp/blob/master/stable/debian-perl/Dockerfile)
+- [`stable-alpine`](https://github.com/vallahaye/docker-nginx-rtmp/blob/master/stable/alpine/Dockerfile)
+- [`stable-alpine-perl`](https://github.com/vallahaye/docker-nginx-rtmp/blob/master/stable/alpine-perl/Dockerfile)
+
+# Quick reference (cont.)
+
+- **Where to file issues**: [https://github.com/vallahaye/docker-nginx-rtmp/issues](https://github.com/vallahaye/docker-nginx-rtmp/issues)
+
+- **Supported architectures**: `amd64`
+
+# How to use this image
+
+## Running a simple forward broadcast service
+
+```nginx
+load_module modules/ngx_rtmp_module.so;
+
+user nginx;
+worker_processes auto;
+
+error_log /var/log/nginx/error.log warn;
+pid /var/run/nginx.pid;
+
+events {
+  worker_connections 1024;
+}
+
+rtmp {
+  access_log /var/log/nginx/access.log;
+  server {
+    listen 1935;
+    listen [::]:1935 ipv6only=on;
+    application live {
+      live on;
+      record off;
+      push rtmp://live.twitch.tv/app/[streamkeyfromtwitch];
+      push rtmp://a.rtmp.youtube.com/live2/[streamkeyfromyoutube];
+    }
+  }
+}
+```
+
+```console
+$ docker run --name some-nginx -v nginx.conf:/etc/nginx/nginx.conf:ro -d vallahaye/nginx-rtmp
+```
+
+Alternatively, a simple `Dockerfile` can be used to generate a new image that includes the necessary configuration (which is a much cleaner solution than the bind mount above):
+
+```dockerfile
+FROM vallahaye/nginx-rtmp
+COPY nginx.conf /etc/nginx/nginx.conf
+```
+
+Place this file in the same directory as your directory containing the NGINX configuration, run `docker build -t nginx-rtmp-forward-broadcast .`, then start your container:
+
+```console
+$ docker run --name some-nginx -d nginx-rtmp-forward-broadcast
+```
+
+## Exposing external port
+
+```console
+$ docker run --name some-nginx -d -p 1935:1935 nginx-rtmp-forward-broadcast
+```
+
+Then you can hit `rtmp://host-ip/live` in your streaming software (see the example bellow).
+
+## Testing the default configuration with OBS Studio and VLC
+
+```console
+$ docker run --rm -p 1935:1935 vallahaye/nginx-rtmp
+```
+
+Open [OBS Studio](https://obsproject.com), click on the `Settings` button and then go to the `Stream` tab. There, select `Custom...` from the `Service` drop-down menu. In the `Server` field, enter `rtmp://host-ip/live` replacing `host-ip` with the IP address of the host where the `nginx-rtmp` container is running. In the `Stream Key` field, enter a value that will be used later in the client `URL` to display that specific stream (for example: `test`). Click `Apply` and then close the `Settings` window. Back to the main window, click the `+` button in the `Sources` panel and add a new `Display Capture` source to the default scene. Start streaming by clicking on the `Start Streaming` button.
+
+Open [VLC](https://www.videolan.org/vlc), go to the `Media` menu and then select `Open Network Stream`. In the `URL` field, enter `rtmp://host-ip/live/stream-key` replacing `host-ip` and `stream-key` with the values defined above. Click the `Play` button.
+
+Now [VLC](https://www.videolan.org/vlc) should display whatever you stream with [OBS Studio](https://obsproject.com).
+
+## Complex configuration
+
+Please, see the [NGINX RTMP module Wiki](https://github.com/arut/nginx-rtmp-module/wiki) as well as the [official NGINX image documentation](https://hub.docker.com/_/nginx) for advanced configuration examples.
+
+# Image Variants
+
+The `nginx-rtmp` images come in many flavors, each designed for a specific use case.
+
+## `nginx-rtmp:<version>`
+
+This is the defacto image. If you are unsure about what your needs are, you probably want to use this one. It is designed to be used both as a throw away container (mount your source code and start the container to start your app), as well as the base to build other images off of.
+
+## `nginx-rtmp:<version>-alpine`
+
+This image is based on the popular [Alpine Linux project](https://alpinelinux.org), available in [the `alpine` official image](https://hub.docker.com/_/alpine). Alpine Linux is much smaller than most distribution base images (~5MB), and thus leads to much slimmer images in general.
+
+This variant is highly recommended when final image size being as small as possible is desired. The main caveat to note is that it does use [musl libc](https://musl.libc.org) instead of [glibc and friends](https://www.etalabs.net/compare_libcs.html), so certain software might run into issues depending on the depth of their libc requirements. However, most software doesn't have an issue with this, so this variant is usually a very safe choice. See [this Hacker News comment thread](https://news.ycombinator.com/item?id=10782897) for more discussion of the issues that might arise and some pro/con comparisons of using Alpine-based images.
+
+To minimize image size, it's uncommon for additional related tools (such as `git` or `bash`) to be included in Alpine-based images. Using this image as a base, add the things you need in your own Dockerfile (see the [`alpine` image description](https://hub.docker.com/_/alpine/) for examples of how to install packages if you are unfamiliar).
+
+# License
+
+View [license information](https://github.com/arut/nginx-rtmp-module/blob/master/LICENSE) for the software contained in this image.
+
+As with all Docker images, these likely also contain other software which may be under other licenses (such as Bash, etc from the base distribution, along with any direct or indirect dependencies of the primary software being contained).
+
+As for any pre-built image usage, it is the image user's responsibility to ensure that any use of this image complies with any relevant licenses for all software contained within.
