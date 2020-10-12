@@ -1,0 +1,27 @@
+#!/bin/bash
+
+set -euo pipefail
+IFS=$'\n\t'
+
+shopt -s extglob
+
+main() {
+  echo "Pushing image $IMAGE_NAME"
+  docker push "$IMAGE_NAME"
+  if [[ "$DOCKER_TAG" == "mainline" ]]; then
+    image_name_latest="$DOCKER_REPO:latest"
+    docker tag "$IMAGE_NAME" "$image_name_latest"
+    echo "Pushing image $image_name_latest"
+    docker push "$image_name_latest"
+  fi
+  mapfile -t image_num_versions < <(docker run --rm "$IMAGE_NAME" \
+    /bin/sh -c 'echo "${NGINX_VERSION}-${RTMP_VERSION}" && echo "${NGINX_VERSION%.*}-${RTMP_VERSION%.*}"')
+  for numver in "${image_num_versions[@]}"; do
+    image_name_num="$DOCKER_REPO:${DOCKER_TAG/+([^-])/$numver}"
+    docker tag "$IMAGE_NAME" "$image_name_num"
+    echo "Pushing image $image_name_num"
+    docker push "$image_name_num"
+  done
+}
+
+main "$@"
