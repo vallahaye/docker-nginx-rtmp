@@ -4,14 +4,14 @@
 
 # Supported tags and respective `Dockerfile` links
 
-- [`1-mainline`, `1.2-mainline`, `1.2.1-mainline`, `mainline`, `latest`](https://github.com/vallahaye/docker-nginx-rtmp/blob/master/mainline/debian/Dockerfile)
-- [`1-mainline-perl`, `1.2-mainline-perl`, `1.2.1-mainline-perl`, `mainline-perl`](https://github.com/vallahaye/docker-nginx-rtmp/blob/master/mainline/debian-perl/Dockerfile)
-- [`1-mainline-alpine`, `1.2-mainline-alpine`, `1.2.1-mainline-alpine`, `mainline-alpine`](https://github.com/vallahaye/docker-nginx-rtmp/blob/master/mainline/alpine/Dockerfile)
-- [`1-mainline-alpine-perl`, `1.2-mainline-alpine-perl`, `1.2.1-mainline-alpine-perl`, `mainline-alpine-perl`](https://github.com/vallahaye/docker-nginx-rtmp/blob/master/mainline/alpine-perl/Dockerfile)
-- [`1-stable`, `1.2-stable`, `1.2.1-stable`, `stable`](https://github.com/vallahaye/docker-nginx-rtmp/blob/master/stable/debian/Dockerfile)
-- [`1-stable-perl`, `1.2-stable-perl`, `1.2.1-stable-perl`, `stable-perl`](https://github.com/vallahaye/docker-nginx-rtmp/blob/master/stable/debian-perl/Dockerfile)
-- [`1-stable-alpine`, `1.2-stable-alpine`, `1.2.1-stable-alpine`, `stable-alpine`](https://github.com/vallahaye/docker-nginx-rtmp/blob/master/stable/alpine/Dockerfile)
-- [`1-stable-alpine-perl`, `1.2-stable-alpine-perl`, `1.2.1-stable-alpine-perl`, `stable-alpine-perl`](https://github.com/vallahaye/docker-nginx-rtmp/blob/master/stable/alpine-perl/Dockerfile)
+- [`${SUBST_RTMP_MAJOR_VERSION}-mainline`, `${SUBST_RTMP_MINOR_VERSION}-mainline`, `${SUBST_RTMP_VERSION}-mainline`, `mainline`, `latest`](https://github.com/vallahaye/docker-nginx-rtmp/blob/master/mainline/debian/Dockerfile)
+- [`${SUBST_RTMP_MAJOR_VERSION}-mainline-perl`, `${SUBST_RTMP_MINOR_VERSION}-mainline-perl`, `${SUBST_RTMP_VERSION}-mainline-perl`, `mainline-perl`](https://github.com/vallahaye/docker-nginx-rtmp/blob/master/mainline/debian-perl/Dockerfile)
+- [`${SUBST_RTMP_MAJOR_VERSION}-mainline-alpine`, `${SUBST_RTMP_MINOR_VERSION}-mainline-alpine`, `${SUBST_RTMP_VERSION}-mainline-alpine`, `mainline-alpine`](https://github.com/vallahaye/docker-nginx-rtmp/blob/master/mainline/alpine/Dockerfile)
+- [`${SUBST_RTMP_MAJOR_VERSION}-mainline-alpine-perl`, `${SUBST_RTMP_MINOR_VERSION}-mainline-alpine-perl`, `${SUBST_RTMP_VERSION}-mainline-alpine-perl`, `mainline-alpine-perl`](https://github.com/vallahaye/docker-nginx-rtmp/blob/master/mainline/alpine-perl/Dockerfile)
+- [`${SUBST_RTMP_MAJOR_VERSION}-stable`, `${SUBST_RTMP_MINOR_VERSION}-stable`, `${SUBST_RTMP_VERSION}-stable`, `stable`](https://github.com/vallahaye/docker-nginx-rtmp/blob/master/stable/debian/Dockerfile)
+- [`${SUBST_RTMP_MAJOR_VERSION}-stable-perl`, `${SUBST_RTMP_MINOR_VERSION}-stable-perl`, `${SUBST_RTMP_VERSION}-stable-perl`, `stable-perl`](https://github.com/vallahaye/docker-nginx-rtmp/blob/master/stable/debian-perl/Dockerfile)
+- [`${SUBST_RTMP_MAJOR_VERSION}-stable-alpine`, `${SUBST_RTMP_MINOR_VERSION}-stable-alpine`, `${SUBST_RTMP_VERSION}-stable-alpine`, `stable-alpine`](https://github.com/vallahaye/docker-nginx-rtmp/blob/master/stable/alpine/Dockerfile)
+- [`${SUBST_RTMP_MAJOR_VERSION}-stable-alpine-perl`, `${SUBST_RTMP_MINOR_VERSION}-stable-alpine-perl`, `${SUBST_RTMP_VERSION}-stable-alpine-perl`, `stable-alpine-perl`](https://github.com/vallahaye/docker-nginx-rtmp/blob/master/stable/alpine-perl/Dockerfile)
 
 # Quick reference (cont.)
 

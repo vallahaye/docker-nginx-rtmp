@@ -1,0 +1,87 @@
+name: ci
+
+on:
+  schedule:
+    - cron: '0 1 * * *'
+  push:
+    tags:
+      - 'v*.*.*-*'
+
+env:
+  DOCKER_REPO: vallahaye/nginx-rtmp
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  build-push:
+    strategy:
+      matrix:
+        build:
+          - tag: mainline-alpine
+            file: ./mainline/alpine/Dockerfile
+          - tag: mainline-alpine-perl
+            file: ./mainline/alpine-perl/Dockerfile
+          - tag: mainline
+            file: ./mainline/debian/Dockerfile
+          - tag: mainline-perl
+            file: ./mainline/debian-perl/Dockerfile
+          - tag: stable-alpine
+            file: ./stable/alpine/Dockerfile
+          - tag: stable-alpine-perl
+            file: ./stable/alpine-perl/Dockerfile
+          - tag: stable
+            file: ./stable/debian/Dockerfile
+          - tag: stable-perl
+            file: ./stable/debian-perl/Dockerfile
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v1
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v1
+      - name: Login to DockerHub
+        uses: docker/login-action@v1
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+      - name: Generate tags
+        id: tags
+        run: |
+          shopt -s extglob
+          declare -a tags
+          version="$(sed -n 's/^RTMP_VERSION=//p' ./update)"
+          minor_version="${version/%.+([0-9])}"
+          major_version="${version//.+([0-9])}"
+          [[ "$DOCKER_TAG" == "mainline" ]] && tags+=("$DOCKER_REPO:latest")
+          tags+=(
+            "$DOCKER_REPO:$DOCKER_TAG"
+            "$DOCKER_REPO:$version-$DOCKER_TAG"
+            "$DOCKER_REPO:$minor_version-$DOCKER_TAG"
+            "$DOCKER_REPO:$major_version-$DOCKER_TAG"
+          )
+          (IFS=,; echo -n "::set-output name=value::${tags[*]}")
+        env:
+          DOCKER_TAG: ${{ matrix.build.tag }}
+      - name: Build and push
+        uses: docker/build-push-action@v2
+        with:
+          context: .
+          file: ${{ matrix.build.file }}
+          platforms: linux/amd64,linux/arm64,linux/386,linux/arm/v7,linux/arm/v6
+          push: true
+          tags: ${{ steps.tags.outputs.value }}
+  update-docs:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Update repo description
+        uses: peter-evans/dockerhub-description@v2
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_PASSWORD }}
+          repository: ${{ env.DOCKER_REPO }}
