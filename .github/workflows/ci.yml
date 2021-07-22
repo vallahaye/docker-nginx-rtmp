@@ -56,12 +56,12 @@ jobs:
           version="$(sed -n 's/^RTMP_VERSION=//p' ./update)"
           minor_version="${version/%.+([0-9])}"
           major_version="${version//.+([0-9])}"
-          [[ "$DOCKER_TAG" == "mainline" ]] && tags+=("$DOCKER_REPO:latest")
+          [[ "${DOCKER_TAG}" == "mainline" ]] && tags+=("${DOCKER_REPO}:latest")
           tags+=(
-            "$DOCKER_REPO:$DOCKER_TAG"
-            "$DOCKER_REPO:$version-$DOCKER_TAG"
-            "$DOCKER_REPO:$minor_version-$DOCKER_TAG"
-            "$DOCKER_REPO:$major_version-$DOCKER_TAG"
+            "${DOCKER_REPO}:${DOCKER_TAG}"
+            "${DOCKER_REPO}:${version}-${DOCKER_TAG}"
+            "${DOCKER_REPO}:${minor_version}-${DOCKER_TAG}"
+            "${DOCKER_REPO}:${major_version}-${DOCKER_TAG}"
           )
           (IFS=,; echo -n "::set-output name=value::${tags[*]}")
         env:
