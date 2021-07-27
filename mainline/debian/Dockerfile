@@ -10,18 +10,20 @@ RUN set -x \
     && chmod a+x build_module.sh \
     && ./build_module.sh -v "${NGINX_VERSION}" -V '1.2.2' -y 'https://github.com/arut/nginx-rtmp-module.git'
 
+
 FROM nginx:mainline
 
 LABEL maintainer="Valentin Lahaye <valentin.lahaye@gmail.com>"
 
 ENV RTMP_VERSION 1.2.2
 
-COPY --from=build-env /tmp/build-module-artifacts/*.deb /tmp/build-module-artifacts/
-COPY nginx.conf /etc/nginx/nginx.conf
+COPY --from=build-env /tmp/build-module-artifacts /tmp/build-module-artifacts/
 
 RUN set -x \
     \
     && dpkg -i -R /tmp/build-module-artifacts \
     && rm -rf /tmp/build-module-artifacts
+
+COPY nginx.conf /etc/nginx/nginx.conf
 
 EXPOSE 1935

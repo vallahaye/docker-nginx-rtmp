@@ -11,18 +11,20 @@ RUN set -x \
     && echo 'builder ALL=(ALL) NOPASSWD:ALL' >> /etc/sudoers \
     && su builder -s /bin/sh -c "./build_module.sh -v '${NGINX_VERSION}' -V '1.2.2' -y 'https://github.com/arut/nginx-rtmp-module.git'"
 
+
 FROM nginx:mainline-alpine-perl
 
 LABEL maintainer="Valentin Lahaye <valentin.lahaye@gmail.com>"
 
 ENV RTMP_VERSION 1.2.2
 
-COPY --from=build-env /tmp/build-module-artifacts/*.apk /tmp/build-module-artifacts/
-COPY nginx.conf /etc/nginx/nginx.conf
+COPY --from=build-env /tmp/build-module-artifacts /tmp/build-module-artifacts/
 
 RUN set -x \
     \
-    && apk add --no-cache --allow-untrusted /tmp/build-module-artifacts/*.apk \
+    && find /tmp/build-module-artifacts -name '*.apk' -exec apk add --no-cache --allow-untrusted {} + \
     && rm -rf /tmp/build-module-artifacts
+
+COPY nginx.conf /etc/nginx/nginx.conf
 
 EXPOSE 1935
