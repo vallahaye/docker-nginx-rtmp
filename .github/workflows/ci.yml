@@ -21,59 +21,73 @@ jobs:
         build:
           - tag: mainline-alpine
             file: ./mainline/alpine/Dockerfile
+            platforms: linux/amd64,linux/arm/v6,linux/arm/v7,linux/arm64/v8,linux/386,linux/ppc64le,linux/s390x
           - tag: mainline-alpine-perl
             file: ./mainline/alpine-perl/Dockerfile
+            platforms: linux/amd64,linux/arm/v6,linux/arm/v7,linux/arm64/v8,linux/386,linux/ppc64le,linux/s390x
           - tag: mainline
             file: ./mainline/debian/Dockerfile
+            platforms: linux/amd64,linux/arm/v7,linux/arm64/v8,linux/386,linux/mips64le,linux/ppc64le,linux/s390x
           - tag: mainline-perl
             file: ./mainline/debian-perl/Dockerfile
+            platforms: linux/amd64,linux/arm/v7,linux/arm64/v8,linux/386,linux/mips64le,linux/ppc64le,linux/s390x
           - tag: stable-alpine
             file: ./stable/alpine/Dockerfile
+            platforms: linux/amd64,linux/arm/v6,linux/arm/v7,linux/arm64/v8,linux/ppc64le,linux/s390x
           - tag: stable-alpine-perl
             file: ./stable/alpine-perl/Dockerfile
+            platforms: linux/amd64,linux/arm/v6,linux/arm/v7,linux/arm64/v8,linux/ppc64le,linux/s390x
           - tag: stable
             file: ./stable/debian/Dockerfile
+            platforms: linux/amd64,linux/arm/v7,linux/arm64/v8,linux/386,linux/mips64le,linux/ppc64le,linux/s390x
           - tag: stable-perl
             file: ./stable/debian-perl/Dockerfile
+            platforms: linux/amd64,linux/arm/v7,linux/arm64/v8,linux/386,linux/mips64le,linux/ppc64le,linux/s390x
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v2
-      - name: Set up QEMU
+      - name: Setup env
+        run: |
+          echo "CURRENT_DATE_TIME=$(date --iso-8601=seconds)" >> $GITHUB_ENV
+          echo "RTMP_VERSION=$(sed -n 's/^LATEST_RTMP_VERSION=//p' update)" >> $GITHUB_ENV
+      - name: Generate image tags list
+        id: gen-image-tags
+        run: |
+          shopt -s extglob
+          declare -a tags
+          minor_version="${RTMP_VERSION/%.+([0-9])}"
+          major_version="${RTMP_VERSION//.+([0-9])}"
+          [[ "${DOCKER_TAG}" == "mainline" ]] && tags+=("${DOCKER_REPO}:latest")
+          tags+=(
+            "${DOCKER_REPO}:${DOCKER_TAG}"
+            "${DOCKER_REPO}:${RTMP_VERSION}-${DOCKER_TAG}"
+            "${DOCKER_REPO}:${minor_version}-${DOCKER_TAG}"
+            "${DOCKER_REPO}:${major_version}-${DOCKER_TAG}"
+          )
+          (IFS=,; echo -n "::set-output name=tags::${tags[*]}")
+        env:
+          DOCKER_TAG: ${{ matrix.build.tag }}
+      - name: Setup QEMU
         uses: docker/setup-qemu-action@v1
-      - name: Set up Docker Buildx
+      - name: Setup Docker Buildx
         uses: docker/setup-buildx-action@v1
       - name: Login to DockerHub
         uses: docker/login-action@v1
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
-      - name: Generate tags
-        id: tags
-        run: |
-          shopt -s extglob
-          declare -a tags
-          version="$(sed -n 's/^RTMP_VERSION=//p' ./update)"
-          minor_version="${version/%.+([0-9])}"
-          major_version="${version//.+([0-9])}"
-          [[ "${DOCKER_TAG}" == "mainline" ]] && tags+=("${DOCKER_REPO}:latest")
-          tags+=(
-            "${DOCKER_REPO}:${DOCKER_TAG}"
-            "${DOCKER_REPO}:${version}-${DOCKER_TAG}"
-            "${DOCKER_REPO}:${minor_version}-${DOCKER_TAG}"
-            "${DOCKER_REPO}:${major_version}-${DOCKER_TAG}"
-          )
-          (IFS=,; echo -n "::set-output name=value::${tags[*]}")
-        env:
-          DOCKER_TAG: ${{ matrix.build.tag }}
-      - name: Build and push
+      - name: Build and push image
         uses: docker/build-push-action@v2
         with:
+          build-args: |
+            "RTMP_VERSION=${{ env.RTMP_VERSION }}"
+            "OCI_IMAGE_CREATED_AT=${{ env.CURRENT_DATE_TIME }}"
           context: .
           file: ${{ matrix.build.file }}
-          platforms: linux/amd64,linux/arm64,linux/386,linux/arm/v7,linux/arm/v6
+          platforms: ${{ matrix.build.platforms }}
           push: true
-          tags: ${{ steps.tags.outputs.value }}
+          tags: ${{ steps.gen-image-tags.outputs.tags }}
   update-docs:
     runs-on: ubuntu-latest
     steps:
