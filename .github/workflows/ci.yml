@@ -3,9 +3,6 @@ name: ci
 on:
   schedule:
     - cron: '0 1 * * *'
-  push:
-    tags:
-      - 'v*.*.*-*'
 
 env:
   DOCKER_REPO: vallahaye/nginx-rtmp
