@@ -50,22 +50,24 @@ jobs:
       - name: Setup env
         run: |
           echo "CURRENT_DATE_TIME=$(date --iso-8601=seconds)" >> $GITHUB_ENV
-          echo "RTMP_VERSION=$(sed -n 's/^LATEST_RTMP_VERSION=//p' update)" >> $GITHUB_ENV
-      - name: Generate image tags list
-        id: gen-image-tags
+          echo "RTMP_VERSION=$(sed -n 's/^RTMP_VERSION=//p' update)" >> $GITHUB_ENV
+      - name: Build image tags
+        id: build-image-tags
         run: |
           shopt -s extglob
-          declare -a tags
-          minor_version="${RTMP_VERSION/%.+([0-9])}"
-          major_version="${RTMP_VERSION//.+([0-9])}"
-          [[ "${DOCKER_TAG}" == "mainline" ]] && tags+=("${DOCKER_REPO}:latest")
-          tags+=(
+          declare -a IMAGE_TAGS
+          if [[ "${DOCKER_TAG}" == "mainline" ]]; then
+            IMAGE_TAGS+=("${DOCKER_REPO}:latest")
+          fi
+          RTMP_MINOR_VERSION="${RTMP_VERSION/%.+([0-9])}"
+          RTMP_MAJOR_VERSION="${RTMP_VERSION//.+([0-9])}"
+          IMAGE_TAGS+=(
             "${DOCKER_REPO}:${DOCKER_TAG}"
             "${DOCKER_REPO}:${RTMP_VERSION}-${DOCKER_TAG}"
-            "${DOCKER_REPO}:${minor_version}-${DOCKER_TAG}"
-            "${DOCKER_REPO}:${major_version}-${DOCKER_TAG}"
+            "${DOCKER_REPO}:${RTMP_MINOR_VERSION}-${DOCKER_TAG}"
+            "${DOCKER_REPO}:${RTMP_MAJOR_VERSION}-${DOCKER_TAG}"
           )
-          (IFS=,; echo -n "::set-output name=tags::${tags[*]}")
+          (IFS=,; echo -n "::set-output name=result::${IMAGE_TAGS[*]}")
         env:
           DOCKER_TAG: ${{ matrix.build.tag }}
       - name: Setup QEMU
@@ -87,7 +89,7 @@ jobs:
           file: ${{ matrix.build.file }}
           platforms: ${{ matrix.build.platforms }}
           push: true
-          tags: ${{ steps.gen-image-tags.outputs.tags }}
+          tags: ${{ steps.build-image-tags.outputs.result }}
   update-docs:
     runs-on: ubuntu-latest
     steps:

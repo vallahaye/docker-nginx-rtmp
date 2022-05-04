@@ -5,32 +5,33 @@ IFS=$'\n\t'
 
 shopt -s extglob
 
-LATEST_RTMP_VERSION=1.2.2
+RTMP_VERSION=1.2.2
 
 update_dockerfiles() {
   for image_dir in */*; do
     echo "Updating Dockerfile for image ${image_dir}"
-    version="${image_dir%/*}"
-    variant="${image_dir##*/}"
-    base="${variant/-*}"
-    variant="${variant/debian?(-)}"
-    base_image_tag="$([[ -z "${variant}" ]] && echo "${version}" || echo "${version}-${variant}")"
+    image_version="${image_dir%/*}"
+    image_variant_full="${image_dir##*/}"
+    image_variant_base="${image_variant_full/-*}"
+    image_variant="${image_variant_full/debian?(-)}"
+    base_image_tag="${image_version}"
+    if [[ -n "${image_variant}" ]]; then
+      base_image_tag+="-${image_variant}"
+    fi
     # shellcheck disable=SC2016
     SUBST_BASE_IMAGE_TAG="${base_image_tag}" \
-    SUBST_LATEST_RTMP_VERSION="${LATEST_RTMP_VERSION}" \
-    envsubst '${SUBST_BASE_IMAGE_TAG},${SUBST_LATEST_RTMP_VERSION}' < "Dockerfile-${base}.template" \
-      > "${image_dir}/Dockerfile"
+    SUBST_RTMP_VERSION="${RTMP_VERSION}" \
+    envsubst '${SUBST_BASE_IMAGE_TAG},${SUBST_RTMP_VERSION}' < "Dockerfile-${image_variant_base}.template" > "${image_dir}/Dockerfile"
   done
 }
 
 update_docs() {
   echo "Updating docs"
   # shellcheck disable=SC2016
-  SUBST_RTMP_VERSION="${LATEST_RTMP_VERSION}" \
-  SUBST_RTMP_MINOR_VERSION="${LATEST_RTMP_VERSION/%.+([0-9])}" \
-  SUBST_RTMP_MAJOR_VERSION="${LATEST_RTMP_VERSION//.+([0-9])}" \
-  envsubst '${SUBST_RTMP_VERSION},${SUBST_RTMP_MINOR_VERSION},${SUBST_RTMP_MAJOR_VERSION}' \
-    < README.template > README.md
+  SUBST_RTMP_VERSION="${RTMP_VERSION}" \
+  SUBST_RTMP_MINOR_VERSION="${RTMP_VERSION/%.+([0-9])}" \
+  SUBST_RTMP_MAJOR_VERSION="${RTMP_VERSION//.+([0-9])}" \
+  envsubst '${SUBST_RTMP_VERSION},${SUBST_RTMP_MINOR_VERSION},${SUBST_RTMP_MAJOR_VERSION}' < README.template > README.md
 }
 
 main() {
