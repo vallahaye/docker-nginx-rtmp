@@ -1,0 +1,33 @@
+name: update
+
+on:
+  schedule:
+    - cron: '0 1 * * *'
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  update-repo:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Run update script
+        run: ./update
+      - name: Check for changes
+        id: check-changes
+        run: |
+          status="unchanged"
+          if [[ -n "$(git status --porcelain VERSION)" ]]; then
+            status="changed"
+          fi
+          echo -n "::set-output name=result::${status}"
+      - name: Commit and push changes
+        if: steps.check-changes.outputs.result == 'changed'
+        run: |
+          git config --global user.name 'Valentin Lahaye'
+          git config --global user.email 'valentin.lahaye@gmail.com'
+          git commit -am "chore(deps): bump nginx-rtmp-module from $(git --no-pager show HEAD:VERSION) to $(<VERSION)"
+          git push
