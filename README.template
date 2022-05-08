@@ -17,7 +17,7 @@
 
 - **Where to file issues**: [https://github.com/vallahaye/docker-nginx-rtmp/issues](https://github.com/vallahaye/docker-nginx-rtmp/issues)
 
-- **Supported architectures**: `amd64`, `arm32v6`, `arm32v7`, `arm64v8`, `i386`, `mips64le`, `ppc64le`, `s390x`
+- **Supported architectures**: `amd64`, `arm32v5`, `arm32v6`, `arm32v7`, `arm64v8`, `i386`, `mips64le`, `ppc64le`, `s390x`
 
 - **Source of this description**: [https://github.com/vallahaye/docker-nginx-rtmp/tree/master](https://github.com/vallahaye/docker-nginx-rtmp/tree/master)
 
